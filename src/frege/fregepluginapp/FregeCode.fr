@@ -1,0 +1,20 @@
+module fregepluginapp.FregeCode where
+
+-- calling with primitives
+multiply :: Int -> Int -> Int
+multiply x y = x * y
+
+-- calling with an array of primitives and work with it as a Frege list
+total :: JArray Int -> Int
+total xs = fold (+) 0 xs.toList
+
+-- sharing relevant parts of a grails domain class
+data Foo = native fregepluginapp.Foo where
+    native getFirstname :: Mutable s Foo -> ST s String
+    native setFirstname :: Mutable s Foo -> String -> ST s ()
+
+-- modifying a grails domain class
+twiceFirstname :: Mutable s Foo -> ST s ()
+twiceFirstname foo = do
+    fnStr <- Foo.getFirstname foo
+    Foo.setFirstname foo (fnStr ++ fnStr)
