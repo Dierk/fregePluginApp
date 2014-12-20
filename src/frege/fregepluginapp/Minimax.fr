@@ -1,0 +1,84 @@
+-- inspired by http://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf
+
+module fregepluginapp.Minimax where
+
+playerX =  1
+playerO = -1
+blank   =  0
+
+data Board = Board [Int]            -- each board is a 0..8 list of placements: playerX, playerO, or blank
+
+data Tree a = Node a [Tree a]       -- a Rose Tree
+
+-- in replacement of the fold-based definition of mapTree (we could also make it a Functor instance)
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree f (Node a [])       = Node (f a) []
+mapTree f (Node a children) = Node (f a) (map (mapTree f) children)
+
+-- who's turn is it to do the next move?
+whosTurn :: Board -> Int
+whosTurn (Board fields) = if even numOfMoves then playerX else playerO where
+    numOfMoves = sum $ map abs fields   -- (-1) goes to 1, so we are counting all playerO and playerX placements
+
+-- all possible boards that can arise from applying a valid move on the current board
+moves :: Board -> [Board]
+moves (now @ Board fields) = map Board (map fieldsWithPlayerPlacedAt blankIndexes) where
+    fieldsWithIndex              = zip fields [1..]
+    blankIndexes                 = [ i | (content,i) <- fieldsWithIndex, content == blank]
+    fieldsWithPlayerPlacedAt pos = [ if i==pos then whosTurn now else content | (content,i) <- fieldsWithIndex]
+
+-- a potentially endless repetition of a tree, where children are constructed by applying f to a.
+repeatTree :: (a -> [a]) -> a -> Tree a
+repeatTree f a = Node a (map (repeatTree f) (f a) )
+
+-- the potentially endless game tree for a given board
+gameTree :: Board -> Tree Board
+gameTree b = repeatTree moves b
+
+-- a valuation of the board between -1 (playerX has lost) and 1 (playerX has won)
+static :: Board -> Double
+static (Board fields)
+    | traceLn ("board  "++ show (fields))         = 0
+    | traceLn ("X      "++ show (hasWon playerX)) = 0
+    | traceLn ("O      "++ show (hasWon playerO)) = 0
+    | hasWon playerX && hasWon playerO = 0 -- tie
+    | hasWon playerX =  1.0 -- well that could  be much more elaborate but only count wins ATM
+    | hasWon playerO = -1.0
+    | otherwise      =  0.0
+    where
+        hasWon player =
+            hasRow player 0 || hasRow player 1 || hasRow player 2 ||        -- this could be much more compact
+            hasCol player 0 || hasCol player 1 || hasCol player 2 ||
+            hasPosDiagonal player || hasNegDiagonal player
+        hasRow player n = (fields !! n == player) && (fields !! (n+1) == player) && (fields !! (n+2) == player)
+        hasCol player n = (fields !! (0+n) == player) && (fields !! (3+n) == player) && (fields !! (6+n) == player)
+        hasPosDiagonal player = (fields !! 6 == player) && (fields !! 4 == player) && (fields !! 2 == player)
+        hasNegDiagonal player = (fields !! 0 == player) && (fields !! 4 == player) && (fields !! 8 == player)
+
+
+maximize :: Tree Double -> Double
+maximize (Node a []) = a
+maximize (Node a children) = maximum (map minimize children) -- what is the value of our best move
+
+minimize :: Tree Double -> Double
+minimize (Node a []) = a
+minimize (Node a children) = minimum (map maximize children) -- assuming the opponent does his best one
+
+
+prune 0 (Node a children) = Node a []
+prune n (Node a children) = Node a (map (prune (n-1)) children)
+
+evaluate :: Board -> Double
+evaluate board = maximize $ mapTree static $ prune 2 $ gameTree board
+
+
+-- for integrating with the environment
+
+unBoard :: Board -> JArray Int
+unBoard (Board fields) = arrayFromList fields
+
+nextBoard :: JArray Int -> JArray Int -- a board is list of 9 integers: 1 White X, -1 Black O, 0 Empty
+nextBoard inFields = unBoard bestMove where
+    possibleMoves  = moves (Board inFields.toList)
+    evaluatedMoves = map (\board -> (board, evaluate board)) possibleMoves
+    bestMove       = fst $ fold (\a \b -> if snd a > snd b then a else b) (Board [], -1) evaluatedMoves

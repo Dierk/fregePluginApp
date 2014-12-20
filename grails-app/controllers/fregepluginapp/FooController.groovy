@@ -1,5 +1,7 @@
 package fregepluginapp
 
+import frege.runtime.Delayed
+
 import static com.canoo.FregeCaller.perform
 import fregepluginapp.FregeCode
 
@@ -20,5 +22,20 @@ class FooController {
 			and the total of [1,2,3] is $total
 			and the doubled Foo first name is $foo.firstname
 """
+	}
+
+	def ttt() {
+		println params
+		def result = [0] * 9
+		def board = params.board
+		if (board) {
+			board = Eval.me(board) // quick&dirty String to list conversion. Not for production!
+			if (params.new != null) board[params.new.toInteger()] = -1 // human has placed mark (O)
+			result = Minimax.nextBoard(board as int[])
+		} else {
+			int randomStartPos = Math.random() * 8
+			result[randomStartPos] = 1 // first mark in the game randomly by computer (X)
+		}
+		render view:'edit', model: [board: result, boardStr: result.toString() ]
 	}
 }
