@@ -2,7 +2,7 @@
 
 module fregepluginapp.Minimax where
 
-playerX =  1
+playerX =  1                        -- would be nicer to make those enums of a proper datatype (?)
 playerO = -1
 blank   =  0
 
@@ -15,17 +15,20 @@ mapTree :: (a -> b) -> Tree a -> Tree b
 mapTree f (Node a [])       = Node (f a) []
 mapTree f (Node a children) = Node (f a) (map (mapTree f) children)
 
--- who's turn is it to do the next move?
+-- who's turn is it to do the next move? Just count the moves.
 whosTurn :: Board -> Int
 whosTurn (Board fields) = if even numOfMoves then playerX else playerO where
-    numOfMoves = sum $ map abs fields   -- (-1) goes to 1, so we are counting all playerO and playerX placements
+    numOfMoves = sum $ map abs fields
 
--- all possible boards that can arise from applying a valid move on the current board
+-- all possible boards that can arise from applying a valid move onto the current board
 moves :: Board -> [Board]
-moves (now @ Board fields) = map Board (map fieldsWithPlayerPlacedAt blankIndexes) where
-    fieldsWithIndex              = zip fields [1..]
-    blankIndexes                 = [ i | (content,i) <- fieldsWithIndex, content == blank]
-    fieldsWithPlayerPlacedAt pos = [ if i==pos then whosTurn now else content | (content,i) <- fieldsWithIndex]
+moves (now @ Board fields)
+    | hasWon now playerX = [] -- we have won  - no more valid moves
+    | hasWon now playerO = [] -- we have lost - no more valid moves
+    | otherwise = map Board (map fieldsWithPlayerPlacedAt blankIndexes) where
+        fieldsWithIndex              = zip fields [1..]
+        blankIndexes                 = [ i | (content,i) <- fieldsWithIndex, content == blank]
+        fieldsWithPlayerPlacedAt pos = [ if i==pos then whosTurn now else content | (content,i) <- fieldsWithIndex]
 
 -- a potentially endless repetition of a tree, where children are constructed by applying f to a.
 repeatTree :: (a -> [a]) -> a -> Tree a
@@ -35,44 +38,49 @@ repeatTree f a = Node a (map (repeatTree f) (f a) )
 gameTree :: Board -> Tree Board
 gameTree b = repeatTree moves b
 
--- a valuation of the board between -1 (playerX has lost) and 1 (playerX has won)
+-- a static valuation of the board between -1 (playerX has lost) and 1 (playerX has won)
 static :: Board -> Double
-static (Board fields)
-    | traceLn ("board  "++ show (fields))         = 0
-    | traceLn ("X      "++ show (hasWon playerX)) = 0
-    | traceLn ("O      "++ show (hasWon playerO)) = 0
-    | hasWon playerX && hasWon playerO = 0 -- tie
-    | hasWon playerX =  1.0 -- well that could  be much more elaborate but only count wins ATM
-    | hasWon playerO = -1.0
-    | otherwise      =  0.0
-    where
-        hasWon player =
-            hasRow player 0 || hasRow player 1 || hasRow player 2 ||        -- this could be much more compact
-            hasCol player 0 || hasCol player 1 || hasCol player 2 ||
-            hasPosDiagonal player || hasNegDiagonal player
-        hasRow player n = (fields !! n == player) && (fields !! (n+1) == player) && (fields !! (n+2) == player)
-        hasCol player n = (fields !! (0+n) == player) && (fields !! (3+n) == player) && (fields !! (6+n) == player)
-        hasPosDiagonal player = (fields !! 6 == player) && (fields !! 4 == player) && (fields !! 2 == player)
-        hasNegDiagonal player = (fields !! 0 == player) && (fields !! 4 == player) && (fields !! 8 == player)
+static (now @ Board fields)
+    | hasWon now playerX =  1.0 -- well that could  be much more elaborate but we only consider wins ATM
+    | hasWon now playerO = -1.0
+    | otherwise          =  0.0
 
+hasWon :: Board -> Int -> Bool
+hasWon (Board fields) player =
+    or [hasTriple row player | row <- [[0,1,2],[3,4,5],[6,7,8]] ]   ||
+    or [hasTriple col player | col <- [[0,3,6],[1,4,7],[2,5,8]] ]   ||
+    hasTriple [6,4,2] player                                        ||
+    hasTriple [0,4,8] player where
+        hasTriple indexes player = and [fields !! x == player | x <- indexes ]
 
-maximize :: Tree Double -> Double
+-- The heart of the game:
+-- the alpha-beta minimax algorithm on any tree of comparable labels (we will use Doubles).
+
+maximize :: Ord a => Tree a -> a
 maximize (Node a []) = a
 maximize (Node a children) = maximum (map minimize children) -- what is the value of our best move
 
-minimize :: Tree Double -> Double
+minimize :: Ord a => Tree a -> a
 minimize (Node a []) = a
 minimize (Node a children) = minimum (map maximize children) -- assuming the opponent does his best one
 
+-- Creating the game tree from valid moves can lead to endless or at least very large trees.
+-- Pruning the tree is a totally separate operation that will later limit the generation.
 
 prune 0 (Node a children) = Node a []
 prune n (Node a children) = Node a (map (prune (n-1)) children)
 
+-- Evaluating a board that results from applying a move is a composition of creating a tree of valid
+-- moves, limiting it, mapping the leaves to their static valuation and minimaxing the whole.
+-- (As opposed to the paper, we use minimize, not maximize, to start the evaluation since we calculate the first
+-- level of the tree ourselves in order to have the maximum move handily available.
+-- Thus, the sequence of min/max starts one level below.)
+
 evaluate :: Board -> Double
-evaluate board = maximize $ mapTree static $ prune 2 $ gameTree board
+evaluate  = minimize . mapTree static . prune 1 . gameTree
 
 
--- for integrating with the environment
+-- -------------------     for integrating with the environment     --------------------------------
 
 unBoard :: Board -> JArray Int
 unBoard (Board fields) = arrayFromList fields

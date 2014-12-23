@@ -110,6 +110,7 @@
 			   click on each to execute its default action:</p>
 
 			<div id="controller-list" role="navigation">
+				<li class="controller"><g:link controller="foo" action="ttt" >Tic Tac Toe</g:link></li>
 				<h2>Available Controllers:</h2>
 				<ul>
 					<g:each var="c" in="${grailsApplication.controllerClasses.sort { it.fullName } }">

@@ -29,9 +29,8 @@
   <tr>${raw( td(0) + td(1) + td(2) )}</tr>
   <tr>${raw( td(3) + td(4) + td(5) )}</tr>
   <tr>${raw( td(6) + td(7) + td(8) )}</tr>
-
 </table>
-
+<g:if test="${gameover}">GAME OVER</g:if>
 <a href="/fregePluginApp/foo/ttt">New Game</a>
 
 <script>
