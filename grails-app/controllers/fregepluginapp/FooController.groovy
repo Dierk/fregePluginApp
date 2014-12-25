@@ -25,7 +25,7 @@ class FooController {
 	}
 
 	def ttt() {
-		println params
+//		println params
 		def result = [0] * 9
 		def gameover = false
 		def board = params.board
@@ -42,6 +42,6 @@ class FooController {
 			int randomStartPos = Math.random() * 8
 			result[randomStartPos] = 1 // first mark in the game randomly by computer (X)
 		}
-		render view:'edit', model: [board: result, boardStr: result.toString(), gameover:gameover ]
+		render view:'edit', model: [board: result, boardStr: result.toString(), gameover:gameover]
 	}
 }

@@ -77,8 +77,7 @@ prune n (Node a children) = Node a (map (prune (n-1)) children)
 -- Thus, the sequence of min/max starts one level below.)
 
 evaluate :: Board -> Double
-evaluate  = minimize . mapTree static . prune 1 . gameTree
-
+evaluate  = minimize . mapTree static . prune 8 . gameTree
 
 -- -------------------     for integrating with the environment     --------------------------------
 
@@ -88,5 +87,8 @@ unBoard (Board fields) = arrayFromList fields
 nextBoard :: JArray Int -> JArray Int -- a board is list of 9 integers: 1 White X, -1 Black O, 0 Empty
 nextBoard inFields = unBoard bestMove where
     possibleMoves  = moves (Board inFields.toList)
-    evaluatedMoves = map (\board -> (board, evaluate board)) possibleMoves
-    bestMove       = fst $ fold (\a \b -> if snd a > snd b then a else b) (Board [], -1) evaluatedMoves
+    evaluatedMoves = map (\board -> (evaluate board, board)) possibleMoves
+    bestMove       = snd $ fold maxBoardByEval noBoard evaluatedMoves where
+        maxBoardByEval a b = if fst a > fst b then a else b
+        noBoard = (-1, Board [])
+
