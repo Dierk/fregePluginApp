@@ -76,18 +76,18 @@ prune n (Node a children) = Node a (map (prune (n-1)) children)
 -- level of the tree ourselves in order to have the maximum move handily available.
 -- Thus, the sequence of min/max starts one level below.)
 
-evaluate :: Board -> Double
-evaluate  = minimize . mapTree static . prune 8 . gameTree
+evaluate :: Int -> Board -> Double
+evaluate lookahead = minimize . mapTree static . prune lookahead . gameTree
 
 -- -------------------     for integrating with the environment     --------------------------------
 
 unBoard :: Board -> JArray Int
 unBoard (Board fields) = arrayFromList fields
 
-nextBoard :: JArray Int -> JArray Int -- a board is list of 9 integers: 1 White X, -1 Black O, 0 Empty
-nextBoard inFields = unBoard bestMove where
+nextBoard :: Int -> JArray Int -> JArray Int -- a board is list of 9 integers: 1 White X, -1 Black O, 0 Empty
+nextBoard lookahead inFields = unBoard bestMove where
     possibleMoves  = moves (Board inFields.toList)
-    evaluatedMoves = map (\board -> (evaluate board, board)) possibleMoves
+    evaluatedMoves = map (\board -> (evaluate lookahead board, board)) possibleMoves
     bestMove       = snd $ fold maxBoardByEval noBoard evaluatedMoves where
         maxBoardByEval a b = if fst a > fst b then a else b
         noBoard = (-1, Board [])

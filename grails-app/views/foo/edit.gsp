@@ -20,7 +20,7 @@
       switch (board[pos]) {
         case  1 : return "<td>X</td>"
         case -1 : return "<td>O</td>"
-        case  0 : return "<td onClick='ttt($pos)'></td>"
+        case  0 : return gameover ? "<td'></td>" : "<td onClick='ttt($pos)'></td>"
       }
     }
   %>
@@ -30,9 +30,14 @@
   <tr>${raw( td(3) + td(4) + td(5) )}</tr>
   <tr>${raw( td(6) + td(7) + td(8) )}</tr>
 </table>
+
+<br>
+Lookahead
+<g:select id="lookahead" name="lookahead" from="${(0..8).toList()}" value="${lookahead}">
+</g:select>
 <br>
 <g:if test="${gameover}">GAME OVER<br></g:if>
-<a href="/fregePluginApp/foo/ttt">New Game</a>
+<button onclick="newGame()">New Game</button>
 
 <p>
   This is a small example of a
@@ -44,7 +49,7 @@
 </p>
 <p>
   The computer is X, you are O. The computer will start with a random move.<br>
-  Please tweet cc @mittie if you ever managed to win.
+  Please tweet cc @mittie if you ever managed to win with a lookahead > 2.
 </p>
 <p>
   P.S. no consideration has been given so far to a nice game play, i.e. displaying state and statistics.
@@ -54,7 +59,12 @@
   var SERVER_URL = window.location.protocol + "//" + window.location.host + window.location.pathname;
 
   function ttt(index) {
-    window.open(SERVER_URL + "?board=${boardStr}" + "&" + "new=" + index, "_self")
+    var lookahead = document.getElementById("lookahead").value;
+    window.open(SERVER_URL + "?board=${boardStr}" + "&new=" + index + "&lookahead=" +lookahead, "_self")
+  }
+  function newGame() {
+    var lookahead = document.getElementById("lookahead").value;
+    window.open(SERVER_URL + "?" + "lookahead=" +lookahead, "_self")
   }
 
 </script>

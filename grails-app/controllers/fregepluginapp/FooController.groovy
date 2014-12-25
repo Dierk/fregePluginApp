@@ -29,10 +29,11 @@ class FooController {
 		def result = [0] * 9
 		def gameover = false
 		def board = params.board
+		int lookahead = params.lookahead?.toInteger() ?: 0
 		if (board) {
 			board = Eval.me(board) // quick&dirty String to list conversion. Not for production!
 			if (params.new != null) board[params.new.toInteger()] = -1 // human has placed mark (O)
-			def calculated  = Minimax.nextBoard(board as int[])
+			def calculated  = Minimax.nextBoard(lookahead, board as int[])
 			if (calculated) {
 				result = calculated
 			} else {
@@ -42,6 +43,6 @@ class FooController {
 			int randomStartPos = Math.random() * 8
 			result[randomStartPos] = 1 // first mark in the game randomly by computer (X)
 		}
-		render view:'edit', model: [board: result, boardStr: result.toString(), gameover:gameover]
+		render view:'edit', model: [board: result, boardStr: result.toString(), gameover:gameover, lookahead:lookahead]
 	}
 }
