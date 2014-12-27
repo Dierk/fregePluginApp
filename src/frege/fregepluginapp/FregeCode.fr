@@ -18,3 +18,13 @@ twiceFirstname :: Mutable s Foo -> ST s ()
 twiceFirstname foo = do
     fnStr <- Foo.getFirstname foo
     Foo.setFirstname foo (fnStr ++ fnStr)
+
+-- a data structure for passing data back and forth between Java/Groovy and Frege
+data Frojo = Frojo {
+    firstname :: String,
+    age       :: Int,
+    nickname  :: String
+}
+
+fillNickName :: Frojo -> Frojo
+fillNickName inFrojo = inFrojo.{ nickname = inFrojo.firstname ++ show inFrojo.age }

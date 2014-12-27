@@ -17,10 +17,15 @@ class FooController {
 		// calling Frege code that is modifying domain classes returns an action that must be performed
 		perform(FregeCode.twiceFirstname(foo))
 
+		def frojo = fregepluginapp.FregeCode$TFrojo.mk("Dierk",46,"original")
+
+		def result = FregeCode.fillNickName(frojo)
+
 		render text: """<pre>
 			5 * 3 is $product
 			and the total of [1,2,3] is $total
-			and the doubled Foo first name is $foo.firstname
+			and the doubled Foo Pojo first name is $foo.firstname
+			and the Frojo data nickname is ${result.nickname(result)}
 """
 	}
 
