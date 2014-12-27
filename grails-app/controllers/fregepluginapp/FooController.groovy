@@ -29,7 +29,7 @@ class FooController {
 		def result = [0] * 9
 		def gameover = false
 		def board = params.board
-		int lookahead = params.lookahead?.toInteger() ?: 0
+		int lookahead = params.lookahead?.toInteger() ?: 3
 		if (board) {
 			board = Eval.me(board) // quick&dirty String to list conversion. Not for production!
 			if (params.new != null) board[params.new.toInteger()] = -1 // human has placed mark (O)
