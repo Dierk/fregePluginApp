@@ -17,8 +17,10 @@ class FooController {
 		// calling Frege code that is modifying domain classes returns an action that must be performed
 		perform(FregeCode.twiceFirstname(foo))
 
+		// using the Frege data structure "Frojo" from Java/Groovy
 		def frojo = Frojo.mk("Dierk",46,"original")
 
+		// using classes as categories such that static methods appear as members of the first argument
 		use FregeCode, Frojo, {
 			def result = frojo.fillNickName()
 
