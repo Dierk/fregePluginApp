@@ -18,7 +18,7 @@ class FooController {
 		perform(FregeCode.twiceFirstname(foo))
 
 		// using the Frege data structure "Frojo" from Java/Groovy
-		def frojo = Frojo.mk("Dierk",46,"original")
+		def frojo = Frojo.mk("Dierk",46,"original", [1,2,3] as int[])
 
 		// using classes as categories such that static methods appear as members of the first argument
 		use FregeCode, Frojo, {
@@ -29,6 +29,7 @@ class FooController {
 				and the total of [1,2,3] is $total
 				and the doubled Foo Pojo first name is $foo.firstname
 				and the Frojo data nickname is ${result.nickname()}
+				and the Frojo numbers (+1) are ${result.numbers()}
 			"""
 		}
 

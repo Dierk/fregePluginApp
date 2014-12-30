@@ -23,8 +23,12 @@ twiceFirstname foo = do
 data Frojo = Frojo {
     firstname :: String,
     age       :: Int,
-    nickname  :: String
+    nickname  :: String,
+    numbers   :: JArray Int
 }
 
 fillNickName :: Frojo -> Frojo
-fillNickName inFrojo = inFrojo.{ nickname = inFrojo.firstname ++ show inFrojo.age }
+fillNickName inFrojo = inFrojo.{
+    nickname = inFrojo.firstname ++ show inFrojo.age ++ show inFrojo.numbers.toList ,
+    numbers  <- arrayMap (+1)
+    }
