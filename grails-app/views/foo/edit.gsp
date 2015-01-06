@@ -3,6 +3,9 @@
 <head>
   <title>Tic Tac Toe</title>
   <style type="text/css" media="screen">
+    body {
+      margin: 4em;
+    }
   td {
     width: 50px;
     height: 50px;
@@ -25,10 +28,27 @@
     }
   %>
 
+<p>The Playing Field</p>
 <table border=1>
   <tr>${raw( td(0) + td(1) + td(2) )}</tr>
   <tr>${raw( td(3) + td(4) + td(5) )}</tr>
   <tr>${raw( td(6) + td(7) + td(8) )}</tr>
+</table>  
+
+<%
+    sh = { pos ->
+      switch (forecast[pos]) {
+        case  1 : return "<td>X</td>"
+        case -1 : return "<td>O</td>"
+        case  0 : return "<td> </td>" 
+      }
+    }
+  %>
+<p>My Forecast</p>
+<table border=1 bgcolor="#d3d3d3">
+  <tr>${raw( sh(0) + sh(1) + sh(2) )}</tr>
+  <tr>${raw( sh(3) + sh(4) + sh(5) )}</tr>
+  <tr>${raw( sh(6) + sh(7) + sh(8) )}</tr>
 </table>
 
 <br>
@@ -41,15 +61,15 @@ Lookahead
 
 <p>
   This is a small example of a
-  <a href="https://github.com/Dierk/fregePluginApp/blob/master/src/frege/fregepluginapp/Minimax.fr">game tree written Frege</a>
+  <a href="https://github.com/Dierk/fregePluginApp/blob/game_only/src/frege/fregepluginapp/Minimax.fr">game tree written Frege</a>
   and included
-  <a href="https://github.com/Dierk/fregePluginApp/blob/master/grails-app/controllers/fregepluginapp/FooController.groovy">inside a Grails application</a>
+  <a href="https://github.com/Dierk/fregePluginApp/blob/game_only/grails-app/controllers/fregepluginapp/FooController.groovy">inside a Grails application</a>
   with the help of the
   <a href="https://github.com/Dierk/FregeGrailsPlugin">Grails Frege Plugin</a>.
 </p>
 <p>
-  The computer is X, you are O. The computer will start with a random move.<br>
-  Please tweet cc @mittie if you ever managed to win with a lookahead > 2.
+  The computer is X, you are O. The computer starts with a random move.<br>
+  Please tweet cc @mittie if you ever managed to win with a lookahead > 2 when the computer starts or > 4 when you start.
 </p>
 <p>
   P.S. no consideration has been given so far to a nice game play, i.e. displaying game state and statistics.

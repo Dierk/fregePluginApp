@@ -8,6 +8,7 @@ class FooController {
 
     def ttt() {
 //		println params
+        def forecast = [0] * 9
         def gameover = false
         int lookahead = params.lookahead != null ? params.lookahead.toInteger() : 3
 
@@ -23,6 +24,7 @@ class FooController {
                 board[params.index.toInteger()] = -1            // human has placed mark (O)
                 def calculated = Minimax.nextBoard(lookahead, board)
                 if (calculated) {
+                    forecast = Minimax.forecast(lookahead, board)
                     board = calculated
                 } else {
                     gameover = true
@@ -30,6 +32,6 @@ class FooController {
             }
         }
 
-        render view: 'edit', model: [board: board, gameover: gameover, lookahead: lookahead]
+        render view: 'edit', model: [board: board, forecast:forecast, gameover: gameover, lookahead: lookahead]
     }
 }
