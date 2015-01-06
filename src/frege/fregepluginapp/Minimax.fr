@@ -6,52 +6,54 @@ playerX =  1                        -- would be nicer to make those enums of a p
 playerO = -1
 blank   =  0
 
-data Board = Board [Int]            -- each board is a 0..8 list of placements: playerX, playerO, or blank
+opponent player = player * (-1)
 
-data Tree a = Node a [Tree a]       -- a Rose Tree
+data Board = Board {
+    whosTurn :: Int,             -- who's turn it is to put the next mark on the board
+    fields   :: [Int]            -- each board is a 0..8 list of placements: playerX, playerO, or blank
+}
+
+data Tree a = Node a [Tree a]    -- a Rose Tree
 
 -- in replacement of the fold-based definition of mapTree (we could also make it a Functor instance)
 mapTree :: (a -> b) -> Tree a -> Tree b
 mapTree f (Node a [])       = Node (f a) []
 mapTree f (Node a children) = Node (f a) (map (mapTree f) children)
 
--- who's turn is it to do the next move? Just count the moves.
-whosTurn :: Board -> Int
-whosTurn (Board fields) = if even numOfMoves then playerX else playerO where
-    numOfMoves = sum $ map abs fields
-
 -- all possible boards that can arise from applying a valid move onto the current board
 moves :: Board -> [Board]
-moves (now @ Board fields)
-    | hasWon now playerX = [] -- we have won  - no more valid moves
-    | hasWon now playerO = [] -- we have lost - no more valid moves
-    | otherwise = map Board (map fieldsWithPlayerPlacedAt blankIndexes) where
-        fieldsWithIndex              = zip fields [1..]
+moves board
+    | hasWon board playerX = [] -- we have won  - no more valid moves
+    | hasWon board playerO = [] -- we have lost - no more valid moves
+    | otherwise = map (Board otherPlayer) boardFieldsAfterMove where
+        otherPlayer                  = opponent board.whosTurn
+        fieldsWithIndex              = zip board.fields [1..]
         blankIndexes                 = [ i | (content,i) <- fieldsWithIndex, content == blank]
-        fieldsWithPlayerPlacedAt pos = [ if i==pos then whosTurn now else content | (content,i) <- fieldsWithIndex]
+        fieldsWithPlayerPlacedAt pos = [ if i==pos then board.whosTurn else content | (content,i) <- fieldsWithIndex]
+        boardFieldsAfterMove         = map fieldsWithPlayerPlacedAt blankIndexes
 
--- a potentially endless repetition of a tree, where children are constructed by applying f to a.
+-- a potentially endless repetition of a tree, where children are constructed by applying function f to the payload a.
 repeatTree :: (a -> [a]) -> a -> Tree a
 repeatTree f a = Node a (map (repeatTree f) (f a) )
 
 -- the potentially endless game tree for a given board
 gameTree :: Board -> Tree Board
-gameTree b = repeatTree moves b
+gameTree board = repeatTree moves board
 
 -- a static valuation of the board between -1 (playerX has lost) and 1 (playerX has won)
 static :: Board -> Double
-static (now @ Board fields)
-    | hasWon now playerX =  1.0 -- well that could  be much more elaborate but we only consider wins ATM
-    | hasWon now playerO = -1.0
-    | otherwise          =  0.0
+static board
+    | hasWon board playerX =  1.0 -- well that could  be much more elaborate but we only consider wins ATM
+    | hasWon board playerO = -1.0
+    | otherwise            =  0.0
 
 hasWon :: Board -> Int -> Bool
-hasWon (Board fields) player =
-    or [hasTriple row player | row <- [[0,1,2],[3,4,5],[6,7,8]] ]   ||
-    or [hasTriple col player | col <- [[0,3,6],[1,4,7],[2,5,8]] ]   ||
-    hasTriple [6,4,2] player                                        ||
+hasWon board player =
+    or [hasTriple row player | row <- [ [0,1,2], [3,4,5], [6,7,8] ] ]   ||
+    or [hasTriple col player | col <- [ [0,3,6], [1,4,7], [2,5,8] ] ]   ||
+    hasTriple [6,4,2] player                                            ||
     hasTriple [0,4,8] player where
-        hasTriple indexes player = and [fields !! x == player | x <- indexes ]
+        hasTriple indexes player = and [board.fields !! x == player | x <- indexes ]
 
 -- The heart of the game:
 -- the alpha-beta minimax algorithm on any tree of comparable labels (we will use Doubles).
@@ -82,13 +84,13 @@ evaluate lookahead = minimize . mapTree static . prune lookahead . gameTree
 -- -------------------     for integrating with the environment     --------------------------------
 
 unBoard :: Board -> JArray Int
-unBoard (Board fields) = arrayFromList fields
+unBoard board = arrayFromList board.fields
 
 nextBoard :: Int -> JArray Int -> JArray Int -- a board is list of 9 integers: 1 White X, -1 Black O, 0 Empty
 nextBoard lookahead inFields = unBoard bestMove where
-    possibleMoves  = moves (Board inFields.toList)
+    possibleMoves  = moves (Board playerX inFields.toList)
     evaluatedMoves = map (\board -> (evaluate lookahead board, board)) possibleMoves
     bestMove       = snd $ fold maxBoardByEval noBoard evaluatedMoves where
         maxBoardByEval a b = if fst a > fst b then a else b
-        noBoard = (-1, Board [])
+        noBoard = (-1, Board playerX [])
 
