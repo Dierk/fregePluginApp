@@ -20,7 +20,7 @@
       switch (board[pos]) {
         case  1 : return "<td>X</td>"
         case -1 : return "<td>O</td>"
-        case  0 : return gameover ? "<td'></td>" : "<td onClick='ttt($pos)'></td>"
+        case  0 : return gameover ? "<td> </td>" : "<td onClick='ttt($pos)'></td>"
       }
     }
   %>
@@ -60,11 +60,11 @@ Lookahead
 
   function ttt(index) {
     var lookahead = document.getElementById("lookahead").value;
-    window.open(SERVER_URL + "?board=${boardStr}" + "&new=" + index + "&lookahead=" +lookahead, "_self")
+    window.open(SERVER_URL + "?index=" + index + "&lookahead=" +lookahead, "_self")
   }
   function newGame() {
     var lookahead = document.getElementById("lookahead").value;
-    window.open(SERVER_URL + "?" + "lookahead=" +lookahead, "_self")
+    window.open(SERVER_URL + "?newGame=true" + "&lookahead=" +lookahead, "_self")
   }
 
 </script>
