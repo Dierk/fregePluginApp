@@ -1,7 +1,9 @@
 package fregepluginapp
 
 class FooController {
+	static scope = "session"
 
+	def computerBegins = true // computer begins
 
 	def ttt() {
 //		println params
@@ -19,8 +21,11 @@ class FooController {
 				gameover = true
 			}
 		} else {
-			int randomStartPos = Math.random() * 8
-			result[randomStartPos] = 1 // first mark in the game randomly by computer (X)
+			if (computerBegins){
+				int randomStartPos = Math.random() * 8
+				result[randomStartPos] = 1 // first mark in the game randomly by computer (X)
+			}
+			computerBegins = ! computerBegins // toggle who begins next
 		}
 		render view:'edit', model: [board: result, boardStr: result.toString(), gameover:gameover, lookahead:lookahead]
 	}
