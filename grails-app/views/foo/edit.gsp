@@ -43,7 +43,7 @@ Lookahead
   This is a small example of a
   <a href="https://github.com/Dierk/fregePluginApp/blob/master/src/frege/fregepluginapp/Minimax.fr">game tree written Frege</a>
   and included
-  <a href="https://github.com/Dierk/fregePluginApp/blob/master/grails-app/controllers/fregepluginapp/FooController.groovy#L27-47">inside a Grails application</a>
+  <a href="https://github.com/Dierk/fregePluginApp/blob/master/grails-app/controllers/fregepluginapp/FooController.groovy">inside a Grails application</a>
   with the help of the
   <a href="https://github.com/Dierk/FregeGrailsPlugin">Grails Frege Plugin</a>.
 </p>
@@ -52,7 +52,7 @@ Lookahead
   Please tweet cc @mittie if you ever managed to win with a lookahead > 2.
 </p>
 <p>
-  P.S. no consideration has been given so far to a nice game play, i.e. displaying state and statistics.
+  P.S. no consideration has been given so far to a nice game play, i.e. displaying game state and statistics.
 </p>
 
 <script>
