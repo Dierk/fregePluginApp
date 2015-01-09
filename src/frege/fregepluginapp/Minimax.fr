@@ -4,27 +4,35 @@ module fregepluginapp.Minimax where
 
 import Data.Tree                    -- make use of the Rose Tree in the stdlib
 
-playerX =  1                        -- would be nicer to make those enums of a proper datatype (?)
-playerO = -1
-blank   =  0
+data Player = Computer | Human | NoPlayer
 
-opponent player = player * (-1)
+opponent :: Player -> Player
+opponent Computer = Human
+opponent Human    = Computer
+opponent NoPlayer = NoPlayer
+
+type Stone = Int
+
+stone :: Player -> Stone
+stone NoPlayer =  0
+stone Computer =  1
+stone Human    = -1
 
 data Board = Board {
-    whosTurn :: Int,             -- who's turn it is to put the next mark on the board
-    fields   :: [Int]            -- each board is a 0..8 list of placements: playerX, playerO, or blank
+    whosTurn :: Player,          -- the Player who's turn it is to put the next mark on the board
+    fields   :: [Stone]          -- each board is a list of stones, indexed 0..8 for tic tac toe
 }
 
--- all possible boards that can arise from applying a valid move onto the current board
+-- all possible boards that can arise from applying a valid move onto the current tic tac toe board
 moves :: Board -> [Board]
 moves board
-    | hasWon board playerX = [] -- we have won  - no more valid moves
-    | hasWon board playerO = [] -- we have lost - no more valid moves
+    | hasWon board Computer = [] -- we have won  - no more valid moves
+    | hasWon board Human    = [] -- we have lost - no more valid moves
     | otherwise = map (Board otherPlayer) boardFieldsAfterMove where
         otherPlayer                  = opponent board.whosTurn
         fieldsWithIndex              = zip board.fields [1..]
-        blankIndexes                 = [ i | (content,i) <- fieldsWithIndex, content == blank]
-        fieldsWithPlayerPlacedAt pos = [ if i==pos then board.whosTurn else content | (content,i) <- fieldsWithIndex]
+        blankIndexes                 = [ i | (content,i) <- fieldsWithIndex, content == stone NoPlayer]
+        fieldsWithPlayerPlacedAt pos = [ if i==pos then stone board.whosTurn else content | (content,i) <- fieldsWithIndex]
         boardFieldsAfterMove         = map fieldsWithPlayerPlacedAt blankIndexes
 
 -- a potentially endless repetition of a tree, where children are constructed by applying function f to the payload a.
@@ -38,17 +46,17 @@ gameTree board = repeatTree moves board
 -- a static valuation of the board between -1 (playerX has lost) and 1 (playerX has won)
 static :: Board -> Double
 static board
-    | hasWon board playerX =  1.0 -- well that could  be much more elaborate but we only consider wins ATM
-    | hasWon board playerO = -1.0
-    | otherwise            =  0.0
+    | hasWon board Computer =  1.0 -- well that could  be much more elaborate but we only consider wins ATM
+    | hasWon board Human    = -1.0
+    | otherwise             =  0.0
 
-hasWon :: Board -> Int -> Bool
+hasWon :: Board -> Player -> Bool
 hasWon board player =
     or [hasTriple row player | row <- [ [0,1,2], [3,4,5], [6,7,8] ] ]   ||
     or [hasTriple col player | col <- [ [0,3,6], [1,4,7], [2,5,8] ] ]   ||
     hasTriple [6,4,2] player                                            ||
     hasTriple [0,4,8] player where
-        hasTriple indexes player = and [board.fields !! x == player | x <- indexes ]
+        hasTriple indexes player = and [board.fields !! x == stone player | x <- indexes ]
 
 -- The heart of the game:
 -- the alpha-beta minimax algorithm on any tree of comparable payload.
@@ -86,9 +94,9 @@ endValue :: Int -> Board -> (Double, Board)
 endValue = evaluateBy capture where
     capture board = (static board, board)
 
-derive   Eq  Board                          -- little trick to make the valuation tuple comparable
-instance Ord Board where
-    (<=>) a b = EQ
+derive   Eq  Player             -- little trick to make the valuation pair comparable: ignore the board
+derive   Eq  Board
+instance Ord Board where (<=>) a b = EQ
 
 -- -------------------     for integrating with the environment     --------------------------------
 
@@ -99,10 +107,10 @@ forecast :: Int -> JArray Int -> JArray Int
 forecast = nextBoardBy endValue
 
 nextBoardBy probe lookahead inFields = unBoard bestMove where
-     possibleMoves  = moves (Board playerX inFields.toList)
+     possibleMoves  = moves (Board Computer inFields.toList)
      evaluatedMoves = map (probe lookahead) possibleMoves
      bestMove       = bestOf evaluatedMoves where
-         bestOf []  = Board playerX [] -- indication that there was no possible move
+         bestOf []  = Board NoPlayer [] -- indication that there was no possible move
          bestOf ms  = snd $ maximum ms
 
 unBoard :: Board -> JArray Int
