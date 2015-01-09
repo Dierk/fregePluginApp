@@ -2,6 +2,8 @@
 
 module fregepluginapp.Minimax where
 
+import Data.Tree                    -- make use of the Rose Tree in the stdlib
+
 playerX =  1                        -- would be nicer to make those enums of a proper datatype (?)
 playerO = -1
 blank   =  0
@@ -12,13 +14,6 @@ data Board = Board {
     whosTurn :: Int,             -- who's turn it is to put the next mark on the board
     fields   :: [Int]            -- each board is a 0..8 list of placements: playerX, playerO, or blank
 }
-
-data Tree a = Node a [Tree a]    -- a Rose Tree
-
--- in replacement of the fold-based definition of mapTree (we could also make it a Functor instance)
-mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree f (Node a [])       = Node (f a) []
-mapTree f (Node a children) = Node (f a) (map (mapTree f) children)
 
 -- all possible boards that can arise from applying a valid move onto the current board
 moves :: Board -> [Board]
@@ -80,12 +75,12 @@ prune n (Node a children) = Node a (map (prune (n-1)) children)
 -- A function f is applied when mapping a tree of Boards to something that can be compared.
 
 evaluateBy :: Ord a => (Board -> a) -> Int -> Board -> a
-evaluateBy f lookahead = minimize . mapTree f . prune lookahead . gameTree
+evaluateBy f lookahead = minimize . fmap f . prune lookahead . gameTree
 
 nowValue :: Int -> Board -> (Double, Board)
 nowValue lookahead board = (evaluateBy static lookahead board, board)
 
--- A second use of the same approach that looks into the expected future
+-- A second use of the same approach that looks into the expected future and captures is for later display
 
 endValue :: Int -> Board -> (Double, Board)
 endValue = evaluateBy capture where
