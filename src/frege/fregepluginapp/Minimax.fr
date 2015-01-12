@@ -35,13 +35,14 @@ moves board
         fieldsWithPlayerPlacedAt pos = [ if i==pos then stone board.whosTurn else content | (content,i) <- fieldsWithIndex]
         boardFieldsAfterMove         = map fieldsWithPlayerPlacedAt blankIndexes
 
--- a potentially endless repetition of a tree, where children are constructed by applying function f to the payload a.
-repeatTree :: (a -> [a]) -> a -> Tree a
-repeatTree f a = Node a (map (repeatTree f) (f a) )
+-- a potentially endless evolution of a tree, where children evolve from applying an unfolding function to the payload "a".
+buildTree :: (a -> [a]) -> a -> Tree a
+buildTree unfold a = Node a children where
+    children = map (buildTree unfold) (unfold a)
 
 -- the potentially endless game tree for a given board
 gameTree :: Board -> Tree Board
-gameTree board = repeatTree moves board
+gameTree board = buildTree moves board
 
 -- a static valuation of the board between -1 (playerX has lost) and 1 (playerX has won)
 static :: Board -> Double
