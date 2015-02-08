@@ -3,6 +3,7 @@
 module fregepluginapp.Minimax where
 
 import Data.Tree                    -- make use of the Rose Tree in the stdlib
+import frege.lib.ForkJoin(mapP)
 
 data Player = Computer | Human | NoPlayer
 
@@ -109,7 +110,7 @@ forecast = nextBoardBy endValue
 
 nextBoardBy probe lookahead inFields = unBoard bestMove where
      possibleMoves  = moves (Board Computer inFields.toList)
-     evaluatedMoves = map (probe lookahead) possibleMoves
+     evaluatedMoves = mapP (probe lookahead) possibleMoves    -- one char change to make it parallel
      bestMove       = bestOf evaluatedMoves where
          bestOf []  = Board NoPlayer [] -- indication that there was no possible move
          bestOf ms  = snd $ maximum ms
