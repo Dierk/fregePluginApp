@@ -68,11 +68,21 @@ Lookahead
   <a href="https://github.com/Dierk/FregeGrailsPlugin">Grails Frege Plugin</a>.
 </p>
 <p>
-  The computer is X, you are O. The computer starts with a random move.<br>
-  Please tweet cc @mittie if you ever managed to win with a lookahead > 2 when the computer starts or > 4 when you start.
+  Here is a series of blog posts that explains this code:
+  <ul>
+  <li><a href="http://www.canoo.com/blog/fp1">Episode 1</a></li>
+  <li><a href="http://www.canoo.com/blog/fp2">Episode 2</a></li>
+  <li><a href="http://www.canoo.com/blog/fp3">Episode 3</a></li>
+  </ul>
 </p>
 <p>
-  P.S. no consideration has been given so far to a nice game play, i.e. displaying game state and statistics.
+  The computer is X, you are O. The computer starts with a random move.<br>
+  Please tweet cc @mittie if you ever managed to win with a lookahead > 2 when the computer starts or > 4 when you start.<br>
+  There is exactly one chance where this can happen :-)
+</p>
+<p>
+  P.S.
+  The focus is on the technique of purely functional programming, not a polished game play.
 </p>
 
 <script>
