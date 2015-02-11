@@ -73,6 +73,7 @@ Lookahead
   <li><a href="http://www.canoo.com/blog/fp1">Episode 1</a></li>
   <li><a href="http://www.canoo.com/blog/fp2">Episode 2</a></li>
   <li><a href="http://www.canoo.com/blog/fp3">Episode 3</a></li>
+  <li><a href="http://www.canoo.com/blog/fp4">Episode 4</a></li>
   </ul>
 </p>
 <p>
